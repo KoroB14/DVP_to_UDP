@@ -1,0 +1,216 @@
+// Copyright (C) 2018  Intel Corporation. All rights reserved.
+// Your use of Intel Corporation's design tools, logic functions 
+// and other software and tools, and its AMPP partner logic 
+// functions, and any output files from any of the foregoing 
+// (including device programming or simulation files), and any 
+// associated documentation or information are expressly subject 
+// to the terms and conditions of the Intel Program License 
+// Subscription Agreement, the Intel Quartus Prime License Agreement,
+// the Intel FPGA IP License Agreement, or other applicable license
+// agreement, including, without limitation, that your use is for
+// the sole purpose of programming logic devices manufactured by
+// Intel and sold by Intel or its authorized distributors.  Please
+// refer to the applicable agreement for further details.
+
+// *****************************************************************************
+// This file contains a Verilog test bench template that is freely editable to  
+// suit user's needs .Comments are provided in each section to help the user    
+// fill out necessary details.                                                  
+// *****************************************************************************
+// Generated on "10/31/2019 13:06:20"
+                                                                                
+// Verilog Test Bench template for design : dvp_to_udp
+// 
+// Simulation tool : ModelSim (Verilog)
+// 
+
+`timescale 1 ps/ 1 ps
+module dvp_to_udp_vlg_tst();
+// constants
+/*
+//OV7670
+parameter Fpclk = 24;      
+parameter Tp = 10**6/ Fpclk;   
+parameter HREF = 2*640;
+parameter HREF_pause = 2*144;
+parameter Tline = 2*784;
+parameter Vsync = 3;
+parameter Vsync_pause = 17;   
+parameter Vsync_back = 10;  
+parameter Line_max = 510;
+*/
+
+//OV2640 800x600x30       
+parameter Fpclk = 48;      
+parameter Tp = 10**6/ Fpclk;   
+parameter HREF = 2*800;
+parameter HREF_pause = 2*390;
+parameter Tline = 2*1190;
+parameter Vsync = 4;
+parameter Vsync_pause = 6;   
+parameter Vsync_back = 62;  
+parameter Line_max = 672;    
+  
+
+//OV2640 1600x1200x15
+/*       
+parameter Fpclk = 72;      
+parameter Tp = 10**6/ Fpclk;   
+parameter HREF = 2*1600;
+parameter HREF_pause = 2*322;
+parameter Tline = 2*1922;
+parameter Vsync = 4;
+parameter Vsync_pause = 14;   
+parameter Vsync_back = 30;  
+parameter Line_max = 1248;     
+ */       
+// general purpose registers
+
+// test vector input registers
+reg HREF_cam = 0;
+reg PCLK_cam = 0;
+reg VSYNC_cam = 1'b1;
+reg [7:0] data_cam = 0;
+reg treg_e_mdio = 0;
+reg e_rxc = 0;
+reg [7:0] e_rxd = 0;
+reg e_rxdv = 0;
+reg e_rxer = 0;
+reg e_txc = 0;
+reg fpga_gclk = 0;
+reg reset_n = 0;
+// wires                                               
+wire XCLK_cam;
+wire e_gtxc;
+wire e_mdc;
+wire e_mdio;
+wire e_reset;
+wire [7:0]  e_txd;
+wire e_txen;
+wire e_txer;
+wire on_off_cam;
+wire res_cam;
+wire sioc;
+wire siod;
+wire fifo_empty = i1.pkt_gen.fifo_empty;
+wire fifo_full = i1.pkt_gen.fifo_full;
+wire rst_d = i1.rst_d;
+wire [15:0] pac_cnt = i1.pkt_gen.pac_cnt;
+wire [1:0] pack_in_line_cnt = i1.pkt_gen.pack_in_line_cnt;
+wire [3:0] SenderState = i1.pkt_gen.SenderState;
+wire [7:0] fifo_data = i1.pkt_gen.fifo_data;
+// assign statements (if any)                          
+assign e_mdio = treg_e_mdio;
+dvp_to_udp 
+#(
+.FAST_SIM(1'b1)
+)
+i1 (
+// port map - connection between master ports and signals/registers   
+	.HREF_cam(HREF_cam),
+	.PCLK_cam(PCLK_cam),
+	.VSYNC_cam(VSYNC_cam),
+	.XCLK_cam(XCLK_cam),
+	.data_cam(data_cam),
+	.e_gtxc(e_gtxc),
+	.e_mdc(e_mdc),
+	.e_mdio(e_mdio),
+	.e_reset(e_reset),
+	.e_rxc(e_rxc),
+	.e_rxd(e_rxd),
+	.e_rxdv(e_rxdv),
+	.e_rxer(e_rxer),
+	.e_txc(e_txc),
+	.e_txd(e_txd),
+	.e_txen(e_txen),
+	.e_txer(e_txer),
+	.fpga_gclk(fpga_gclk),
+	.on_off_cam(on_off_cam),
+	.res_cam(res_cam),
+	.reset_n(reset_n),
+	.sioc(sioc),
+	.siod(siod)
+);
+initial                                                
+begin                                                  
+// code that executes only once                        
+// insert code here --> begin                          
+#1000 reset_n <= 1'b1;                                                           
+// --> end                                             
+$display("Running testbench");                       
+end                                                    
+always                                                 
+	#10000 fpga_gclk <= ~fpga_gclk;
+
+always
+	#4000 e_rxc <= ~e_rxc;
+
+always
+	#(Tp / 2)  PCLK_cam <= ~PCLK_cam;
+
+
+//generate cam sync signals
+reg [15:0] pix_cnt = 0,line_cnt = 0;
+reg [7:0] frame_cnt = 0;
+
+always @ (negedge PCLK_cam)
+	if (pix_cnt < HREF + HREF_pause)
+		pix_cnt <= pix_cnt + 1'b1;
+	else
+		pix_cnt <= 0;
+
+always @ (negedge PCLK_cam)
+	if (line_cnt == Line_max - 1)
+		line_cnt <= 0;
+	else if (pix_cnt == HREF + HREF_pause - 1)
+		line_cnt <= line_cnt + 1'b1;
+
+always @ (negedge PCLK_cam)
+	VSYNC_cam <= (line_cnt < Vsync);
+
+always @ (negedge PCLK_cam)
+	HREF_cam <= ((line_cnt > Vsync + Vsync_pause - 1) && (line_cnt < Line_max - Vsync_back ) && (pix_cnt < HREF));
+
+//generate cam data_cam
+reg second_byte = 0;
+reg [7:0] red = 0, green = 0, blue = 0;
+wire [7:0] W = {8{pix_cnt[7:0]==line_cnt[7:0]}};
+wire [7:0] A = {8{pix_cnt[7:5]==3'h2 && line_cnt[7:5]==3'h2}};
+
+always @(posedge PCLK_cam) 
+	red <= ({pix_cnt[5:0] & {6{line_cnt[4:3]==~pix_cnt[4:3]}}, 2'b00} | W) & ~A;
+always @(posedge PCLK_cam) 
+	green <= (pix_cnt[7:0] & {8{line_cnt[6]}} | W) & ~A;
+always @(posedge PCLK_cam) 
+	blue <= line_cnt[7:0] | W | A;
+
+wire [4:0] r = red * 31 / 255;
+wire [5:0] g = green * 63 / 255;
+wire [4:0] b = blue * 31 / 255;
+
+always @ (negedge PCLK_cam)
+	if (HREF_cam) begin
+		second_byte <= ~second_byte;
+		if (second_byte)
+			data_cam <= {g[2:0], b};
+		else
+			data_cam <= {r , g[5:3]};
+		end
+	else
+		data_cam <= 0;
+		
+//frame counter
+always @ (posedge VSYNC_cam)
+	frame_cnt <= frame_cnt + 1'b1;
+	
+//stop conditions
+reg sim_done = 0;
+always @ (negedge PCLK_cam)
+	if (frame_cnt == 3) begin
+		sim_done <= 1'b1;
+		$display("Simulation finished");  
+		$stop();
+		end
+		
+endmodule
+

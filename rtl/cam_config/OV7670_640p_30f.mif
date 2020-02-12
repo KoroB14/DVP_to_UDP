@@ -1,0 +1,52 @@
+DEPTH = 256;                   -- The size of memory in words
+WIDTH = 16;                    -- The size of data in bits
+ADDRESS_RADIX = DEC;          -- The radix for address values
+DATA_RADIX = HEX;             -- The radix for data values
+CONTENT                       -- start of (address : data pairs)
+BEGIN
+	0: 1280; --reset
+    1: FFF0; --delay
+    2: 1204; -- COM7,     set RGB color output
+    3: 1180; -- CLKRC     internal PLL matches input clock
+	4: 6b4a;
+    5: 0C00; -- COM3,     default settings
+    6: 3E00; -- COM14,    no scaling, normal pclock
+    7: 0400; -- COM1,     disable CCIR656
+    8: 40d0; --COM15,     RGB565, full output range
+    9: 3a04; --TSLB       set correct output data sequence (magic)
+    10: 1418; --COM9       MAX AGC value x4
+    11: 4FB3; --MTX1       all of these are magical matrix coefficients
+    12: 50B3; --MTX2
+    13: 5100; --MTX3 
+    14: 523d; --MTX4
+    15: 53A7; --MTX5
+    16: 54E4; --MTX6
+    17: 589E; --MTXS
+    18: 3DC0; --COM13      sets gamma enable, does not preserve reserved bits, may be wrong?
+    19: 1714; --HSTART     start high 8 bits
+    20: 1802; --HSTOP      stop high 8 bits --these kill the odd colored line
+    --20: 3280; --HREF       edge offset
+	21: 8C00;  --rgb444
+    22: 1903; --VSTART     start high 8 bits
+    23: 1A7B; --VSTOP      stop high 8 bits
+    24: 030A; --VREF       vsync edge offset
+    25: 0F41; --COM6       reset timings
+    26: 1E00; --MVFP       disable mirror / flip --might have magic value of 03
+    27: 330B; --CHLF       --magic value from the internet
+    28: 3C78; --COM12      no HREF when VSYNC low
+    29: 6900; --GFIX       fix gain control
+    30: 7400; --REG74      Digital gain control
+    31: B084; --RSVD       magic value from the internet *required* for good color
+    32: B10c; --ABLC1
+    33: B20e; --RSVD       more magic internet values
+    34: B380; --THL_ST
+    --34: 71B5; --Test pattern
+	35: 2291; --RSVD       magic value from the internet *required* for good color
+	36: 2907; --ABLC1
+    37: 330b; --RSVD       more magic internet values
+    38: 350b; --THL_ST
+	39: 1e07; --GFIX       fix gain control
+    40: 2102; --REG74     
+	41: FFFF; --mark end of ROM
+
+END;
