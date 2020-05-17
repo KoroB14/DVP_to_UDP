@@ -24,12 +24,13 @@ module SCCB_interface
 #(
     parameter CLK_FREQ = 25000000,
 	 parameter CAMERA_ADDR = 8'h42,
+	 parameter I2C_ADDR_16 = 0,
     parameter SCCB_FREQ = 100000
 )
 (
     input wire clk,
     input wire start,
-    input wire [7:0] address,
+    input wire [7 + 8*I2C_ADDR_16:0] address,
     input wire [7:0] data,
     output reg ready,
     output reg SIOC_oe,
@@ -61,9 +62,9 @@ module SCCB_interface
     reg [3:0] FSM_state = 0;
     reg [3:0] FSM_return_state = 0;
     reg [31:0] timer = 0;
-    reg [7:0] latched_address;
+    reg [7 + 8*I2C_ADDR_16:0] latched_address;
     reg [7:0] latched_data; 
-    reg [1:0] byte_counter = 0;
+    reg [1 + I2C_ADDR_16:0] byte_counter = 0;
     reg [7:0] tx_byte = 0;
     reg [3:0] byte_index = 0;
     
@@ -95,7 +96,8 @@ module SCCB_interface
             end
             
             FSM_LOAD_BYTE: begin //load next byte to be transmitted
-                FSM_state <= (byte_counter == 3) ? FSM_END_SIGNAL_1 : FSM_TX_BYTE_1;
+                if (I2C_ADDR_16 == 0) begin : gen_8bit_addr
+					 FSM_state <= (byte_counter == 3) ? FSM_END_SIGNAL_1 : FSM_TX_BYTE_1;
                 byte_counter <= byte_counter + 1'h1;
                 byte_index <= 0; //clear byte index
                 case(byte_counter)
@@ -104,6 +106,19 @@ module SCCB_interface
                     2: tx_byte <= latched_data;
                     default: tx_byte <= latched_data;
                 endcase
+					 end
+					 else if (I2C_ADDR_16 == 1) begin : gen_16bit_addr
+					 FSM_state <= (byte_counter == 4) ? FSM_END_SIGNAL_1 : FSM_TX_BYTE_1;
+                byte_counter <= byte_counter + 1'h1;
+                byte_index <= 0; //clear byte index
+                case(byte_counter)
+                    0: tx_byte <= CAMERA_ADDR;
+                    1: tx_byte <= latched_address[15:8];
+						  2: tx_byte <= latched_address[7:0];
+                    3: tx_byte <= latched_data;
+                    default: tx_byte <= latched_data;
+                endcase
+					 end
             end
             
             FSM_TX_BYTE_1: begin //bring SIOC low and and delay for next state 

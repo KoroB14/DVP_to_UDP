@@ -8,9 +8,12 @@ set_time_format -unit ns -decimal_places 3
 #OV2640 800x600x30
 #set PCLK_FREQ "48MHz"
 #OV2640 1600x1200x15
-set PCLK_FREQ "72MHz"
+#set PCLK_FREQ "72MHz"
+#OV5642
+set PCLK_FREQ "96MHz"
 
-set CAM_DATA_DELAY 5.000
+#set CAM_DATA_DELAY 5.000
+set CAM_DATA_DELAY 2.500
 # Clock constraints
 create_clock -name "e_rxc" -period 8.000ns [get_ports {e_rxc}] -waveform {0.000 4.000}
 create_clock -period 20.000 -waveform {0.000 10.000} -name fpga_gclk [get_ports {fpga_gclk}]

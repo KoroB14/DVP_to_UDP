@@ -3,12 +3,19 @@
 // Dmitry Koroteev
 // korob14@gmail.com
 //////////////////////////////////////////////////////////////////////////////////
+//Included cam registers files
+//OV2640_800p_30f.mif OV2640_1600p_15f.mif OV7670_640p_30f.mif
+//OV5642_1920p_15f.mif OV5642_1920p_30f_gray_cam_processed.mif OV5642_1280p_30f.mif OV5642_1280p_60f_gray_cam_processed.mif
+//For cam on-chip processed modes set FPGA_PROCESSED to 2
 module dvp_to_udp
-#(	parameter IM_X = 800,
-	parameter IM_Y = 600,
+#(	parameter IM_X = 1280,
+	parameter IM_Y = 720,
 	parameter COLOR_MODE = 2,		// 1 - Grayscale, 2 - RGB565	
-	parameter CAMERA_ADDR = 8'h60,// 8'h60 - OV2640, 8'h42 - OV7670
-	parameter ETH_FRAMES = 1,		// 0 - Jumbo Frames, 1 - ETH Frames: MTU < 1500
+	parameter CAMERA_ADDR = 8'h78,// 8'h60 - OV2640, 8'h42 - OV7670, 8'h78 - OV5642
+	parameter MIF_FILE = "./rtl/cam_config/OV5642_1280p_30f.mif", // Camera registers init file
+	parameter ETH_FRAMES = 1,		// 0 - Jumbo Frames, 1 - ETH Frames: MTU < 1500,
+	parameter FPGA_PROCESSED = 2, // 1 - Convert RGB565 -> 8-bit Grayscale, 2 - No processing 
+	parameter I2C_ADDR_16 = (CAMERA_ADDR == 8'h78),// Enable 16-bit I2C address
 	parameter FAST_SIM = 0			// 1- Fast simulation mode
 	
 )
@@ -83,7 +90,7 @@ main_pll	main_pll_inst (
 	.c1 (gtx_clk),
 	.locked ( main_pll_locked )
 	);
-assign XCLK_cam = pix_clk;
+assign XCLK_cam = (CAMERA_ADDR == 8'h78) ? 1'bz : pix_clk;
 //rst delay
 rst_delay 
 #(
@@ -98,11 +105,13 @@ rst_delay (
 
 //camera config
 
-assign res_cam = rst_modules;
+assign res_cam = (CAMERA_ADDR == 8'h78) ? 0 : rst_modules;
 camera_configure 
 #(	
     .CLK_FREQ 	(	50000000		 ),
 	 .CAMERA_ADDR (CAMERA_ADDR),
+	 .MIF_FILE(MIF_FILE),
+	 .I2C_ADDR_16(I2C_ADDR_16),
 	 .FAST_SIM(FAST_SIM)
 )
 camera_configure_0
@@ -119,7 +128,7 @@ camera_configure_0
 
 cam_capture 
 #(
-	.COLOR_MODE(COLOR_MODE)
+	.COLOR_MODE(FPGA_PROCESSED)
 )
 cam_capture_0
 (
@@ -130,7 +139,7 @@ cam_capture_0
 	.PCLK_cam           ( PCLK_cam				),
 	.pixel				  ( pixdata ),
 	.pixel_valid		  ( pixdata_valid ),
-	.out_ready			  ( in_ready ),
+	.out_ready			  ( in_ready )
 
 );
 

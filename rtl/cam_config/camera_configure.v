@@ -24,6 +24,8 @@ module camera_configure
     #(
     parameter CLK_FREQ=24000000,
 	 parameter CAMERA_ADDR = 8'h42,
+	 parameter MIF_FILE = "./rtl/cam_config/ov5642_1280p_3_gray_60f.mif",
+	 parameter I2C_ADDR_16 = 0,
 	 parameter FAST_SIM = 0
     )
     (
@@ -36,9 +38,9 @@ module camera_configure
     );
     wire start;
 	 wire conf_done;
-    wire [7:0] rom_addr;
-    wire [15:0] rom_dout;
-    wire [7:0] SCCB_addr;
+    wire [9:0] rom_addr;
+    wire [15 + 8*I2C_ADDR_16:0] rom_dout;
+    wire [7 + 8*I2C_ADDR_16:0] SCCB_addr;
     wire [7:0] SCCB_data;
     wire SCCB_start;
     wire SCCB_ready;
@@ -67,13 +69,18 @@ module camera_configure
     assign start = (strt == 16'hfff0	);
 	
 		
-    OV7670_config_rom rom1(
+    OV7670_config_rom # (.I2C_ADDR_16(I2C_ADDR_16),
+								 .MIF_FILE(MIF_FILE))
+	 rom1(
         .clk(clk),
         .addr(rom_addr),
         .dout(rom_dout)
         );
         
-    OV7670_config #(.CLK_FREQ(CLK_FREQ)) config_1(
+    OV7670_config #(.CLK_FREQ(CLK_FREQ),
+						  .I2C_ADDR_16(I2C_ADDR_16)
+	 ) 
+	 config_1(
         .clk(clk),
         .SCCB_interface_ready(SCCB_ready),
         .rom_data(rom_dout),
@@ -87,7 +94,8 @@ module camera_configure
     
     SCCB_interface 
 	 #( .CLK_FREQ(CLK_FREQ),
-		 .CAMERA_ADDR(CAMERA_ADDR)
+		 .CAMERA_ADDR(CAMERA_ADDR),
+		 .I2C_ADDR_16(I2C_ADDR_16)
 	 ) 
 	 SCCB1(
         .clk(clk),

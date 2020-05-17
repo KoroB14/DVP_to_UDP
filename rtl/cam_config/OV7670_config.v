@@ -22,16 +22,17 @@
 
 module OV7670_config
 #(
-    parameter CLK_FREQ = 25000000
+    parameter CLK_FREQ = 25000000,
+	 parameter I2C_ADDR_16 = 0
 )
 (
     input wire clk,
     input wire SCCB_interface_ready,
-    input wire [15:0] rom_data,
+    input wire [15 + 8*I2C_ADDR_16:0] rom_data,
     input wire start,
-    output reg [7:0] rom_addr,
+    output reg [9:0] rom_addr,
     output reg done,
-    output reg [7:0] SCCB_interface_addr,
+    output reg [7 + 8*I2C_ADDR_16:0] SCCB_interface_addr,
     output reg [7:0] SCCB_interface_data,
     output reg SCCB_interface_start
     );
@@ -64,7 +65,7 @@ module OV7670_config
             end
             
             FSM_SEND_CMD: begin 
-                case(rom_data)
+                case(rom_data[15:0])
                     16'hFFFF: begin //end of ROM
                         FSM_state <= FSM_DONE;
                     end
@@ -82,7 +83,7 @@ module OV7670_config
                             FSM_return_state <= FSM_SEND_CMD;
                             timer <= 1'h0; //one cycle delay gives ready chance to deassert
                             rom_addr <= rom_addr + 1'h1;
-                            SCCB_interface_addr <= rom_data[15:8];
+                            SCCB_interface_addr <= rom_data[15 + 8*I2C_ADDR_16:8];
                             SCCB_interface_data <= rom_data[7:0];
                             SCCB_interface_start <= 1;
                         end

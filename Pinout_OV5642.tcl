@@ -1,5 +1,3 @@
-# -------------------------------------------------------------------------- #
-#
 # Copyright (C) 2018  Intel Corporation. All rights reserved.
 # Your use of Intel Corporation's design tools, logic functions 
 # and other software and tools, and its AMPP partner logic 
@@ -13,46 +11,11 @@
 # the sole purpose of programming logic devices manufactured by
 # Intel and sold by Intel or its authorized distributors.  Please
 # refer to the applicable agreement for further details.
-#
-# -------------------------------------------------------------------------- #
-#
-# Quartus Prime
-# Version 18.0.0 Build 614 04/24/2018 SJ Lite Edition
-# Date created = 17:51:08  February 06, 2020
-#
-# -------------------------------------------------------------------------- #
-#
-# Notes:
-#
-# 1) The default values for assignments are stored in the file:
-#		dvp_to_udp_assignment_defaults.qdf
-#    If this file doesn't exist, see file:
-#		assignment_defaults.qdf
-#
-# 2) Altera recommends that you do not modify this file. This
-#    file is updated automatically by the Quartus Prime software
-#    and any changes you make may be lost or overwritten.
-#
-# -------------------------------------------------------------------------- #
 
 
-set_global_assignment -name FAMILY "Cyclone IV E"
-set_global_assignment -name DEVICE EP4CE15F23C8
-set_global_assignment -name TOP_LEVEL_ENTITY dvp_to_udp
-set_global_assignment -name ORIGINAL_QUARTUS_VERSION 18.0.0
-set_global_assignment -name PROJECT_CREATION_TIME_DATE "17:51:08  FEBRUARY 06, 2020"
-set_global_assignment -name LAST_QUARTUS_VERSION "18.0.0 Lite Edition"
-set_global_assignment -name PROJECT_OUTPUT_DIRECTORY output_files
-set_global_assignment -name MIN_CORE_JUNCTION_TEMP 0
-set_global_assignment -name MAX_CORE_JUNCTION_TEMP 85
-set_global_assignment -name ERROR_CHECK_FREQUENCY_DIVISOR 1
-set_global_assignment -name NOMINAL_CORE_SUPPLY_VOLTAGE 1.2V
-set_global_assignment -name EDA_SIMULATION_TOOL "ModelSim (Verilog)"
-set_global_assignment -name EDA_TIME_SCALE "1 ps" -section_id eda_simulation
-set_global_assignment -name EDA_OUTPUT_DATA_FORMAT "VERILOG HDL" -section_id eda_simulation
-set_global_assignment -name PARTITION_NETLIST_TYPE SOURCE -section_id Top
-set_global_assignment -name PARTITION_FITTER_PRESERVATION_LEVEL PLACEMENT_AND_ROUTING -section_id Top
-set_global_assignment -name PARTITION_COLOR 16764057 -section_id Top
+
+package require ::quartus::project
+
 set_location_assignment PIN_L21 -to e_gtxc
 set_location_assignment PIN_W22 -to e_mdc
 set_location_assignment PIN_W21 -to e_mdio
@@ -143,43 +106,3 @@ set_location_assignment PIN_C1 -to res_cam
 set_location_assignment PIN_C2 -to on_off_cam
 set_instance_assignment -name CURRENT_STRENGTH_NEW 8MA -to e_gtxc
 set_instance_assignment -name SLEW_RATE 2 -to e_gtxc
-set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to siod
-set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to sioc
-set_global_assignment -name ENABLE_OCT_DONE OFF
-set_global_assignment -name ENABLE_CONFIGURATION_PINS OFF
-set_global_assignment -name ENABLE_BOOT_SEL_PIN OFF
-set_global_assignment -name USE_CONFIGURATION_DEVICE OFF
-set_global_assignment -name CRC_ERROR_OPEN_DRAIN OFF
-set_global_assignment -name STRATIX_DEVICE_IO_STANDARD "3.3-V LVTTL"
-set_global_assignment -name CYCLONEII_RESERVE_NCEO_AFTER_CONFIGURATION "USE AS REGULAR IO"
-set_global_assignment -name OUTPUT_IO_TIMING_NEAR_END_VMEAS "HALF VCCIO" -rise
-set_global_assignment -name OUTPUT_IO_TIMING_NEAR_END_VMEAS "HALF VCCIO" -fall
-set_global_assignment -name OUTPUT_IO_TIMING_FAR_END_VMEAS "HALF SIGNAL SWING" -rise
-set_global_assignment -name OUTPUT_IO_TIMING_FAR_END_VMEAS "HALF SIGNAL SWING" -fall
-set_global_assignment -name POWER_PRESET_COOLING_SOLUTION "23 MM HEAT SINK WITH 200 LFPM AIRFLOW"
-set_global_assignment -name POWER_BOARD_THERMAL_MODEL "NONE (CONSERVATIVE)"
-set_global_assignment -name EDA_TEST_BENCH_ENABLE_STATUS TEST_BENCH_MODE -section_id eda_simulation
-set_global_assignment -name EDA_NATIVELINK_SIMULATION_TEST_BENCH dvp_to_udp_vlg_tst -section_id eda_simulation
-set_global_assignment -name EDA_TEST_BENCH_NAME dvp_to_udp_vlg_tst -section_id eda_simulation
-set_global_assignment -name EDA_DESIGN_INSTANCE_NAME NA -section_id dvp_to_udp_vlg_tst
-set_global_assignment -name EDA_TEST_BENCH_MODULE_NAME dvp_to_udp_vlg_tst -section_id dvp_to_udp_vlg_tst
-set_global_assignment -name EDA_TEST_BENCH_FILE simulation/modelsim/dvp_to_udp.vt -section_id dvp_to_udp_vlg_tst
-set_global_assignment -name VERILOG_TEST_BENCH_FILE simulation/modelsim/dvp_to_udp.vt
-set_global_assignment -name QIP_FILE rtl/main_pll/main_pll.qip
-set_global_assignment -name VERILOG_FILE rtl/cam_config/SCCB_interface.v
-set_global_assignment -name VERILOG_FILE rtl/cam_config/OV7670_config_rom_mif.v
-set_global_assignment -name VERILOG_FILE rtl/cam_config/OV7670_config.v
-set_global_assignment -name VERILOG_FILE rtl/cam_config/camera_configure.v
-set_global_assignment -name VERILOG_FILE rtl/udp_pkt_gen.v
-set_global_assignment -name VERILOG_FILE rtl/rst_delay.v
-set_global_assignment -name VERILOG_FILE rtl/dvp_to_udp.v
-set_global_assignment -name VERILOG_FILE rtl/detect_edge.v
-set_global_assignment -name VERILOG_FILE rtl/cam_capture.v
-set_global_assignment -name SDC_FILE dvp_to_udp.sdc
-set_global_assignment -name VERILOG_FILE rtl/pixel_data_fifo.v
-set_global_assignment -name ENABLE_SIGNALTAP OFF
-set_global_assignment -name USE_SIGNALTAP_FILE output_files/stp1.stp
-set_global_assignment -name SIGNALTAP_FILE output_files/stp1.stp
-set_global_assignment -name TCL_SCRIPT_FILE Pinout_OV5642.tcl
-set_global_assignment -name VERILOG_FILE rtl/Bayer_to_RGB.v
-set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top

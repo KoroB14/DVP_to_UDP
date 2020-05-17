@@ -27,7 +27,16 @@
 `timescale 1 ps/ 1 ps
 module dvp_to_udp_vlg_tst();
 // constants
-/*
+
+parameter ETH_FRAMES = 1;
+parameter FAST_SIM = 1;
+parameter COLOR_MODE =2;
+//`define OV7670_640x480_30fps
+//`define OV2640_800x600_30fps
+//`define OV2640_1600x1200_15fps
+`define OV5642_1920x1080_15fps
+
+`ifdef OV7670_640x480_30fps
 //OV7670
 parameter Fpclk = 24;      
 parameter Tp = 10**6/ Fpclk;   
@@ -38,8 +47,13 @@ parameter Vsync = 3;
 parameter Vsync_pause = 17;   
 parameter Vsync_back = 10;  
 parameter Line_max = 510;
-*/
+parameter IM_X = 640;
+parameter IM_Y = 480;
+parameter I2C_ADDR_16 = 0;
+parameter CAMERA_ADDR = 8'h42;
+`endif
 
+`ifdef OV2640_800x600_30fps
 //OV2640 800x600x30       
 parameter Fpclk = 48;      
 parameter Tp = 10**6/ Fpclk;   
@@ -49,11 +63,15 @@ parameter Tline = 2*1190;
 parameter Vsync = 4;
 parameter Vsync_pause = 6;   
 parameter Vsync_back = 62;  
-parameter Line_max = 672;    
-  
+parameter Line_max = 672;
+parameter IM_X = 800;
+parameter IM_Y = 600;
+parameter I2C_ADDR_16 = 0;   
+parameter CAMERA_ADDR = 8'h60;
+`endif 
 
-//OV2640 1600x1200x15
-/*       
+`ifdef OV2640_1600x1200_15fps
+//OV2640 1600x1200x15      
 parameter Fpclk = 72;      
 parameter Tp = 10**6/ Fpclk;   
 parameter HREF = 2*1600;
@@ -62,8 +80,29 @@ parameter Tline = 2*1922;
 parameter Vsync = 4;
 parameter Vsync_pause = 14;   
 parameter Vsync_back = 30;  
-parameter Line_max = 1248;     
- */       
+parameter Line_max = 1248;
+parameter IM_X = 1600;
+parameter IM_Y = 1200;
+parameter I2C_ADDR_16 = 0;   
+parameter CAMERA_ADDR = 8'h60;     
+`endif 
+
+`ifdef OV5642_1920x1080_15fps
+//OV5642 1920x1080x15      
+parameter Fpclk = 96;      
+parameter Tp = 10**6/ Fpclk;   
+parameter HREF = 2*1920;
+parameter HREF_pause = 2*598;
+parameter Tline = 2*2518;
+parameter Vsync = 4;
+parameter Vsync_pause = 8;   
+parameter Vsync_back = 20;  
+parameter Line_max = 1112;
+parameter IM_X = 1920;
+parameter IM_Y = 1080;
+parameter I2C_ADDR_16 = 1;   
+parameter CAMERA_ADDR = 8'h78;     
+`endif    
 // general purpose registers
 
 // test vector input registers
@@ -99,11 +138,19 @@ wire [15:0] pac_cnt = i1.pkt_gen.pac_cnt;
 wire [1:0] pack_in_line_cnt = i1.pkt_gen.pack_in_line_cnt;
 wire [3:0] SenderState = i1.pkt_gen.SenderState;
 wire [7:0] fifo_data = i1.pkt_gen.fifo_data;
+wire conf_done = i1.conf_done;
 // assign statements (if any)                          
 assign e_mdio = treg_e_mdio;
 dvp_to_udp 
 #(
-.FAST_SIM(1'b1)
+.FAST_SIM(FAST_SIM),
+.ETH_FRAMES(ETH_FRAMES),
+.IM_X(IM_X),
+.IM_Y(IM_Y),
+.I2C_ADDR_16(I2C_ADDR_16),
+.CAMERA_ADDR(CAMERA_ADDR),
+.COLOR_MODE(COLOR_MODE)
+
 )
 i1 (
 // port map - connection between master ports and signals/registers   

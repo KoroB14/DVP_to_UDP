@@ -20,14 +20,16 @@
 //////////////////////////////////////////////////////////////////////////////////
 //source: https://github.com/westonb/OV7670-Verilog
 
-module OV7670_config_rom(
+module OV7670_config_rom
+	#(parameter I2C_ADDR_16 = 0,
+	  parameter MIF_FILE = "./rtl/cam_config/ov5642_1280p_3_gray_60f.mif")
+	(
     input wire clk,
-    input wire [7:0] addr,
-    output reg [15:0] dout
+    input wire [9:0] addr,
+    output reg [15 + 8*I2C_ADDR_16:0] dout
     );
-    //Included files
-	 //OV2640_800p_30f.mif OV2640_1600p_15f.mif OV7670_640p_30f.mif
-	reg [15:0] rom [255:0] /* synthesis ram_init_file = "./rtl/cam_config/OV2640_800p_30f.mif" */;
+    
+	(* ram_init_file = MIF_FILE *) reg [15 + 8*I2C_ADDR_16:0] rom [1023:0];
 	
 	always @ (posedge clk)
 	begin
