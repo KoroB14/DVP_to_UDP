@@ -5,14 +5,17 @@
 `timescale 1 ns / 1 ps
 
 module cam_capture
-#(	parameter COLOR_MODE = 1
+#(	parameter COLOR_MODE = 1,
+	parameter IM_X = 1280,
+	parameter IM_Y = 720
 )
 (         
 	input wire 					rst_n,
 	input wire		[7:0]		data_cam,
 	input wire					VSYNC_cam,
 	input wire					HREF_cam,
-	input wire					PCLK_cam,	
+	input wire					PCLK_cam,
+	input wire					gtx_clk,
 	input wire 					out_ready,
 	output wire 	[7:0]		pixel,
 	output wire					pixel_valid
@@ -98,6 +101,8 @@ else begin
 	pixel_valid_r <= out_ready;
 	end	
 
+assign pixel = pixel_r;
+assign pixel_valid = pixel_valid_r;
 end
 // Reg for RGB
 else if (COLOR_MODE == 2) begin: Generate_RGB
@@ -111,11 +116,27 @@ always @( posedge PCLK_cam or negedge rst_n )
 		pixel_valid_r <= HREF_cam & start & out_ready;
 		end
 
+assign pixel = pixel_r;
+assign pixel_valid = pixel_valid_r;
+end
+// RAW to RGB565
+else if (COLOR_MODE == 3) begin: Generate_RAW_to_RGB
+RAW_to_RGB565 #(.IM_X(IM_X), .IM_Y(IM_Y)) RAW_to_RGB565_inst
+(
+	.rst_n(rst_n),
+	.PCLK_cam(PCLK_cam),
+	.gtx_clk(gtx_clk),
+	.raw_data(data_cam),
+	.data_valid(HREF_cam & start),
+	.out_ready(out_ready),
+	.in_ready(),
+	.pixel(pixel),
+	.pixel_valid(pixel_valid)
+);
 end
 endgenerate
 
-assign pixel = pixel_r;
-assign pixel_valid = pixel_valid_r;	
+	
 
 endmodule
 

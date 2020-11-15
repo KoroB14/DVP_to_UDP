@@ -30,19 +30,21 @@ module dvp_to_udp_vlg_tst();
 
 parameter ETH_FRAMES = 1;
 parameter FAST_SIM = 1;
-parameter COLOR_MODE =2;
+parameter COLOR_MODE = 3;
+parameter mul = (COLOR_MODE == 2) ? 2 : 1;
 //`define OV7670_640x480_30fps
 //`define OV2640_800x600_30fps
 //`define OV2640_1600x1200_15fps
-`define OV5642_1920x1080_15fps
+//`define OV5642_1920x1080_15fps
+`define OV5642_1280x720_60fps
 
 `ifdef OV7670_640x480_30fps
 //OV7670
 parameter Fpclk = 24;      
 parameter Tp = 10**6/ Fpclk;   
-parameter HREF = 2*640;
-parameter HREF_pause = 2*144;
-parameter Tline = 2*784;
+parameter HREF = mul*640;
+parameter HREF_pause = mul*144;
+parameter Tline = mul*784;
 parameter Vsync = 3;
 parameter Vsync_pause = 17;   
 parameter Vsync_back = 10;  
@@ -57,9 +59,9 @@ parameter CAMERA_ADDR = 8'h42;
 //OV2640 800x600x30       
 parameter Fpclk = 48;      
 parameter Tp = 10**6/ Fpclk;   
-parameter HREF = 2*800;
-parameter HREF_pause = 2*390;
-parameter Tline = 2*1190;
+parameter HREF = mul*800;
+parameter HREF_pause = mul*390;
+parameter Tline = mul*1190;
 parameter Vsync = 4;
 parameter Vsync_pause = 6;   
 parameter Vsync_back = 62;  
@@ -74,9 +76,9 @@ parameter CAMERA_ADDR = 8'h60;
 //OV2640 1600x1200x15      
 parameter Fpclk = 72;      
 parameter Tp = 10**6/ Fpclk;   
-parameter HREF = 2*1600;
-parameter HREF_pause = 2*322;
-parameter Tline = 2*1922;
+parameter HREF = mul*1600;
+parameter HREF_pause = mul*322;
+parameter Tline = mul*1922;
 parameter Vsync = 4;
 parameter Vsync_pause = 14;   
 parameter Vsync_back = 30;  
@@ -91,9 +93,9 @@ parameter CAMERA_ADDR = 8'h60;
 //OV5642 1920x1080x15      
 parameter Fpclk = 96;      
 parameter Tp = 10**6/ Fpclk;   
-parameter HREF = 2*1920;
-parameter HREF_pause = 2*598;
-parameter Tline = 2*2518;
+parameter HREF = mul*1920;
+parameter HREF_pause = mul*598;
+parameter Tline = mul*2518;
 parameter Vsync = 4;
 parameter Vsync_pause = 8;   
 parameter Vsync_back = 20;  
@@ -103,6 +105,24 @@ parameter IM_Y = 1080;
 parameter I2C_ADDR_16 = 1;   
 parameter CAMERA_ADDR = 8'h78;     
 `endif    
+
+`ifdef OV5642_1280x720_60fps
+//OV5642 1280x720x60      
+parameter Fpclk = 96;      
+parameter Tp = 10**6/ Fpclk;   
+parameter HREF = mul*1280;
+parameter HREF_pause = mul*882;
+parameter Tline = mul*2162;
+parameter Vsync = 4;
+parameter Vsync_pause = 8;   
+parameter Vsync_back = 8;  
+parameter Line_max = 740;
+parameter IM_X = 1280;
+parameter IM_Y = 720;
+parameter I2C_ADDR_16 = 1;   
+parameter CAMERA_ADDR = 8'h78;     
+`endif  
+
 // general purpose registers
 
 // test vector input registers
@@ -149,7 +169,7 @@ dvp_to_udp
 .IM_Y(IM_Y),
 .I2C_ADDR_16(I2C_ADDR_16),
 .CAMERA_ADDR(CAMERA_ADDR),
-.COLOR_MODE(COLOR_MODE)
+.COLOR_MODE(1)
 
 )
 i1 (
@@ -206,17 +226,23 @@ always @ (negedge PCLK_cam)
 	else
 		pix_cnt <= 0;
 
+reg even_line = 0; 
 always @ (negedge PCLK_cam)
 	if (line_cnt == Line_max - 1)
 		line_cnt <= 0;
-	else if (pix_cnt == HREF + HREF_pause - 1)
+	else if (pix_cnt == HREF + HREF_pause - 1) begin
 		line_cnt <= line_cnt + 1'b1;
+		even_line <= ~even_line;
+		end
 
 always @ (negedge PCLK_cam)
 	VSYNC_cam <= (line_cnt < Vsync);
-
-always @ (negedge PCLK_cam)
-	HREF_cam <= ((line_cnt > Vsync + Vsync_pause - 1) && (line_cnt < Line_max - Vsync_back ) && (pix_cnt < HREF));
+	
+reg HREF_int = 0;
+always @ (negedge PCLK_cam) begin
+	HREF_int <= ((line_cnt > Vsync + Vsync_pause - 1) && (line_cnt < Line_max - Vsync_back ) && (pix_cnt < HREF));
+	HREF_cam <= HREF_int; 
+	end
 
 //generate cam data_cam
 reg second_byte = 0;
@@ -236,12 +262,24 @@ wire [5:0] g = green * 63 / 255;
 wire [4:0] b = blue * 31 / 255;
 
 always @ (negedge PCLK_cam)
-	if (HREF_cam) begin
+	if (HREF_int) begin
 		second_byte <= ~second_byte;
-		if (second_byte)
-			data_cam <= {g[2:0], b};
-		else
-			data_cam <= {r , g[5:3]};
+		if (COLOR_MODE == 2)
+			if (second_byte)
+				data_cam <= {g[2:0], b};
+			else
+				data_cam <= {r , g[5:3]};
+			
+		else if (COLOR_MODE == 1)
+			data_cam <= (red>>2)+(red>>5)+(green>>1)+(green>>4)+(blue>>4)+(blue>>5);
+		else if (COLOR_MODE == 3)
+			case ({even_line, second_byte})
+				2'b00 : data_cam <= 'haa;
+				2'b01 : data_cam <= 'hbb;
+				2'b10 : data_cam <= 'hcc;
+				2'b11 : data_cam <= 'hdd;
+				default : data_cam <= 0;
+			endcase
 		end
 	else
 		data_cam <= 0;

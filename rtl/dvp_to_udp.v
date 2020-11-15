@@ -6,15 +6,17 @@
 //Included cam registers files
 //OV2640_800p_30f.mif OV2640_1600p_15f.mif OV7670_640p_30f.mif
 //OV5642_1920p_15f.mif OV5642_1920p_30f_gray_cam_processed.mif OV5642_1280p_30f.mif OV5642_1280p_60f_gray_cam_processed.mif
-//For cam on-chip processed modes set FPGA_PROCESSED to 2
+//OV5642_1280p_60f_RAW.mif
+//For cam on-chip processing modes set FPGA_PROCESSING to 2 and COLOR_MODE to 1
+//For RAW to RGB conversion set FPGA_PROCESSING to 3 and COLOR_MODE to 2
 module dvp_to_udp
-#(	parameter IM_X = 1280,
-	parameter IM_Y = 720,
-	parameter COLOR_MODE = 2,		// 1 - Grayscale, 2 - RGB565	
+#(	parameter IM_X = 1920,
+	parameter IM_Y = 1080,
+	parameter COLOR_MODE = 1,		// 1 - Grayscale, 2 - RGB565	
 	parameter CAMERA_ADDR = 8'h78,// 8'h60 - OV2640, 8'h42 - OV7670, 8'h78 - OV5642
-	parameter MIF_FILE = "./rtl/cam_config/OV5642_1280p_30f.mif", // Camera registers init file
-	parameter ETH_FRAMES = 1,		// 0 - Jumbo Frames, 1 - ETH Frames: MTU < 1500,
-	parameter FPGA_PROCESSED = 2, // 1 - Convert RGB565 -> 8-bit Grayscale, 2 - No processing 
+	parameter MIF_FILE = "./rtl/cam_config/OV5642_1920p_30f_gray_cam_processed.mif", // Camera registers init file
+	parameter ETH_FRAMES = 0,		// 0 - Jumbo Frames, 1 - ETH Frames: MTU < 1500,
+	parameter FPGA_PROCESSING = 2, // 1 - Convert RGB565 -> 8-bit Grayscale, 2 - No processing, 3 - Convert RAW -> RGB565 
 	parameter I2C_ADDR_16 = (CAMERA_ADDR == 8'h78),// Enable 16-bit I2C address
 	parameter FAST_SIM = 0			// 1- Fast simulation mode
 	
@@ -128,7 +130,9 @@ camera_configure_0
 
 cam_capture 
 #(
-	.COLOR_MODE(FPGA_PROCESSED)
+	.COLOR_MODE(FPGA_PROCESSING),
+	.IM_X(IM_X),
+	.IM_Y(IM_Y)
 )
 cam_capture_0
 (
@@ -137,6 +141,7 @@ cam_capture_0
 	.VSYNC_cam          ( VSYNC_cam				),
 	.HREF_cam           ( HREF_cam				),
 	.PCLK_cam           ( PCLK_cam				),
+	.gtx_clk				  ( gtx_clk ),
 	.pixel				  ( pixdata ),
 	.pixel_valid		  ( pixdata_valid ),
 	.out_ready			  ( in_ready )
@@ -155,7 +160,7 @@ udp_pkt_gen
 pkt_gen
 (
 	.clk(gtx_clk),
-	.wrclk(PCLK_cam),
+	.wrclk((FPGA_PROCESSING == 3) ? gtx_clk : PCLK_cam),
 	.rst_n(rst_d),
 	.in_valid(pixdata_valid),
 	.in_data(pixdata),

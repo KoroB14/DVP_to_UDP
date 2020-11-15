@@ -23,8 +23,7 @@ def main():
     
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM )
     sock.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, 65536*4096)
-    sock.setsockopt(socket.SOL_SOCKET, socket.SO_EXCLUSIVEADDRUSE, True)
-    
+        
     sock.setblocking(True)
     
     port = 1024
