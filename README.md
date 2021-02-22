@@ -1,7 +1,7 @@
 # DVP_to_UDP
 Uncompressed video over UDP using 1000BASE-T Ethernet on Cyclone IV FPGA. Videos:
 
-[![Video - OV5642](http://img.youtube.com/vi/Rz6kp0QwiS8/0.jpg)](http://www.youtube.com/watch?v=Rz6kp0QwiS8)
+[![Video - OV5642](http://img.youtube.com/vi/znprSZ_4i_A/0.jpg)](http://www.youtube.com/watch?v=znprSZ_4i_A)
 
 [![Video - OV2640](http://img.youtube.com/vi/DarNFEHpn6I/0.jpg)](http://www.youtube.com/watch?v=DarNFEHpn6I)
 
